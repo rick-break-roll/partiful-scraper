@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Attendee Parser</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      margin-bottom: 1rem;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .download-link {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Event Attendee Parser</h1>
+    <p>Paste the raw HTML below to extract attendees info into CSV.</p>
+    <textarea id="htmlInput" placeholder="Paste HTML here..."></textarea>
+    <button onclick="parseHTML()">Parse and Download CSV</button>
+    <div class="download-link" id="downloadLink"></div>
+  </div>
+  <script>
+    function parseHTML() {
+      const html = document.getElementById("htmlInput").value;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const buttons = doc.querySelectorAll("button.ptf-He5d7.ptf-2Af3E");
+      let rows = [["Name", "Bio", "Image URL", "Instagram", "Twitter"]];
+
+      buttons.forEach(btn => {
+        const name = btn.querySelector(".ptf-tzbCO")?.innerText.trim() || "";
+        const bio = btn.querySelector(".ptf-6n-N4")?.innerText.trim() || "";
+        const img = btn.querySelector("img")?.src || "";
+        const links = [...btn.querySelectorAll("a")].map(a => a.href);
+        const ig = links.find(href => href.includes("instagram.com")) || "";
+        const tw = links.find(href => href.includes("twitter.com")) || "";
+        rows.push([name, bio, img, ig, tw]);
+      });
+
+      const csvContent = rows.map(e => e.map(v => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      document.getElementById("downloadLink").innerHTML = `<a href="${url}" download="event_attendees.csv">Download CSV</a>`;
+    }
+  </script>
+</body>
+</html>
